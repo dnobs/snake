@@ -1,6 +1,6 @@
 # snake
 
-basic snake game
+Basic snake game. I made this as a way to learn app creation with Flutter / Dart.
 
 ## Getting Started
 
