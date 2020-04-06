@@ -9,18 +9,18 @@ class HomePage extends StatefulWidget{
 
 class _HomePageState extends State<HomePage> {
   SnakeBody snake;
-  int gameGridSize = 10;
+  int gameGridSize = 4;
   List<int> buttons = [1, 3, 5, 7];
 
   @override
   void initState(){
     super.initState();
-    snake = setUpSnake();
+    setupSnake();
+//    snake = new SnakeBody([[1,1]], 'right');
   }
 
-  SnakeBody setUpSnake(){
-    return new SnakeBody([[1,1]], 'right');
-
+  void setupSnake(){
+    snake = new SnakeBody([[1,1]], 'right');
   }
 
   @override
@@ -47,7 +47,8 @@ class _HomePageState extends State<HomePage> {
                 itemCount: pow(gameGridSize, 2),
                 itemBuilder: (context, i) => new Container(
                   child: Center(
-                      child: Text(getCords(i).toString())
+//                      child: Text(getCords(i).toString())
+                  child: Text(snake.at(getCords(i)) ? 'x' : '')
                   ),
                   color: getCellColor(i),
                 ),
@@ -72,7 +73,7 @@ class _HomePageState extends State<HomePage> {
                 itemCount: 9,
                 itemBuilder: (context, i) => new RaisedButton(
                   color: buttons.contains(i) ? Colors.red: Colors.grey[100],
-                  onPressed: setDirection,
+                  onPressed: (){updateDirection(i);},
                   child: Text(i.toString()),
                 )
               ),
@@ -84,30 +85,48 @@ class _HomePageState extends State<HomePage> {
         mainAxisSize: MainAxisSize.max,
       )
     );
-}
+  }
 
-// get xy co-ordiates for a given cell and grid size
-List<int> getCords(int i){
+  // get xy co-ordiates for a given cell and grid size
+  List<int> getCords(int i){
     var loc = [i % gameGridSize, (i / gameGridSize).floor()];
     return loc;
-}
+  }
 
-// button controls
-void setDirection(){
-    return null;
-}
+  // button controls
+  void updateDirection(int button){
+    if(button == 1) snake.changeDirection('up');
+    if(button == 5) snake.changeDirection('right');
+    if(button == 7) snake.changeDirection('down');
+    if(button == 3) snake.changeDirection('left');
 
+    // for testing:
+    if(button == 4) moveSnake();
+  }
 
-Color getCellColor(int i){
+  void moveSnake(){
+    // move head forwards
+    List<int> delta = snake.direction;
+    List<int> head = snake.head;
+    snake.newHead([head[0] + delta[0], head[1] + delta[1]]);
+
+    // update graphics
+    setState((){
+
+      print(snake.toString());
+
+    });
+  }
+
+  Color getCellColor(int i){
     List<int> loc = getCords(i);
     if(snake.at(getCords(i))) {
-      return Colors.black;
+      print('found snake');
+      return Colors.blue;
     }else{
       return Colors.grey[100];
     }
-}
 
-void moveSnake(){
-}
+  }
 
 }
