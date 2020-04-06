@@ -4,33 +4,28 @@ import 'dart:math';
 
 class HomePage extends StatefulWidget{
   @override
-  _HomePageState createState() => new _HomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   SnakeBody snake;
-  int gameGridSize = 4;
+  int gameGridSize = 10;
   List<int> buttons = [1, 3, 5, 7];
 
   @override
   void initState(){
     super.initState();
-    setupSnake();
-//    snake = new SnakeBody([[1,1]], 'right');
-  }
-
-  void setupSnake(){
-    snake = new SnakeBody([[1,1]], 'right');
+    snake = SnakeBody([[1,1]], 'right');
   }
 
   @override
   Widget build(BuildContext context){
-    return new Scaffold(
-      appBar: new AppBar(
-        title: new Text("Snake"),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Snake"),
       ),
 
-      body: new Column(
+      body: Column(
         children: <Widget>[
 
           // Game Area
@@ -45,10 +40,10 @@ class _HomePageState extends State<HomePage> {
                   mainAxisSpacing: 1.0,
                   ),
                 itemCount: pow(gameGridSize, 2),
-                itemBuilder: (context, i) => new Container(
+                itemBuilder: (context, i) => Container(
                   child: Center(
 //                      child: Text(getCords(i).toString())
-                  child: Text(snake.at(getCords(i)) ? 'x' : '')
+                  child: Text(snake.at(getCords(i)) ? 'x' : getCords(i).toString())
                   ),
                   color: getCellColor(i),
                 ),
@@ -71,7 +66,7 @@ class _HomePageState extends State<HomePage> {
                   childAspectRatio: 1,
                 ),
                 itemCount: 9,
-                itemBuilder: (context, i) => new RaisedButton(
+                itemBuilder: (context, i) => RaisedButton(
                   color: buttons.contains(i) ? Colors.red: Colors.grey[100],
                   onPressed: (){updateDirection(i);},
                   child: Text(i.toString()),
@@ -108,25 +103,31 @@ class _HomePageState extends State<HomePage> {
     // move head forwards
     List<int> delta = snake.direction;
     List<int> head = snake.head;
-    snake.newHead([head[0] + delta[0], head[1] + delta[1]]);
+    List<int> newHead = [head[0] + delta[0], head[1] + delta[1]];
+
+    // if the snake is going off the board, wrap it
+    if(newHead[0] < 0)                newHead[0] = gameGridSize-1;
+    if(newHead[0] > gameGridSize - 1) newHead[0] = 0;
+    if(newHead[1] < 0)                newHead[1] = gameGridSize-1;
+    if(newHead[1] > gameGridSize - 1) newHead[1] = 0;
+
+    snake.newHead(newHead);
+    snake.dropTail();
 
     // update graphics
     setState((){
-
       print(snake.toString());
-
     });
   }
 
   Color getCellColor(int i){
-    List<int> loc = getCords(i);
     if(snake.at(getCords(i))) {
-      print('found snake');
+      print('checking for snake at: ' + getCords(i).toString() + ' SNAKE');
       return Colors.blue;
     }else{
+      print('checking for snake at: ' + getCords(i).toString());
       return Colors.grey[100];
     }
-
   }
 
 }
