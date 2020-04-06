@@ -1,0 +1,9 @@
+- main screen should have a square box that is the parent of individual cells
+    - how do we make sure it's a square?
+    - aspect ratio!
+
+- implementation:
+    - controls: don't care, but make it changeable
+    - snake & grid:
+        - snake is subclass of grid cell
+        - maybe I don't even need to keep a grid cell?? yeah I don't think I need to...

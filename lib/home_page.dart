@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:snake/grid_cell.dart';
+import 'package:snake/snake_body.dart';
+import 'dart:math';
 
 class HomePage extends StatefulWidget{
   @override
@@ -7,25 +8,22 @@ class HomePage extends StatefulWidget{
 }
 
 class _HomePageState extends State<HomePage> {
-List<GridCell> myGrid;
+  SnakeBody snake;
+  int gameGridSize = 10;
+  List<int> buttons = [1, 3, 5, 7];
 
   @override
   void initState(){
     super.initState();
-    myGrid = doInit(gridSize: 100);
+    snake = setUpSnake();
   }
 
-List<GridCell> doInit({gridSize}){
-    var grid = new List<GridCell>();
-    for(int x = 0; x < gridSize; x++){
-      for(int y = 0; y < gridSize; y++){
-        grid.add(new GridCell(loc : [x, y]));
-      }
-    }
-    return grid;
-}
+  SnakeBody setUpSnake(){
+    return new SnakeBody([[1,1]], 'right');
 
-@override
+  }
+
+  @override
   Widget build(BuildContext context){
     return new Scaffold(
       appBar: new AppBar(
@@ -34,38 +32,82 @@ List<GridCell> doInit({gridSize}){
 
       body: new Column(
         children: <Widget>[
-          new Expanded(
-            child: new GridView.builder(
-              padding: const EdgeInsets.all(10.0),
-              gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 10,
-                childAspectRatio: 1.0,
-                crossAxisSpacing: 1.0,
-                mainAxisSpacing: 1.0,
-                ),
-              itemCount: myGrid.length,
-              itemBuilder: (context, i) => new SizedBox(
-                width: 10.0,
-                height: 10.0,
 
-                // this defines the individual game cells
-                child: new RaisedButton(
-                  padding: const EdgeInsets.all(8.0),
-                  color: Colors.white,
-                  onPressed: myFunction,
+          // Game Area
+          Expanded(
+            child: AspectRatio(
+              child: GridView.builder(
+                padding: const EdgeInsets.all(10.0),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: gameGridSize,
+                  childAspectRatio: 1.0, // ensures each cell is a square
+                  crossAxisSpacing: 1.0,
+                  mainAxisSpacing: 1.0,
+                  ),
+                itemCount: pow(gameGridSize, 2),
+                itemBuilder: (context, i) => new Container(
+                  child: Center(
+                      child: Text(getCords(i).toString())
+                  ),
+                  color: getCellColor(i),
                 ),
-
               ),
-            )
+              aspectRatio: 1,
+            ),
+            flex: 3,
+          ),
+
+          // Controls Area
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: GridView.builder(
+                padding: const EdgeInsets.all(10.0),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 15,
+                  childAspectRatio: 1,
+                ),
+                itemCount: 9,
+                itemBuilder: (context, i) => new RaisedButton(
+                  color: buttons.contains(i) ? Colors.red: Colors.grey[100],
+                  onPressed: setDirection,
+                  child: Text(i.toString()),
+                )
+              ),
+            ),
+            flex: 2,
           )
+
         ],
+        mainAxisSize: MainAxisSize.max,
       )
     );
 }
 
-void myFunction(){
+// get xy co-ordiates for a given cell and grid size
+List<int> getCords(int i){
+    var loc = [i % gameGridSize, (i / gameGridSize).floor()];
+    return loc;
+}
+
+// button controls
+void setDirection(){
     return null;
 }
 
+
+Color getCellColor(int i){
+    List<int> loc = getCords(i);
+    if(snake.at(getCords(i))) {
+      return Colors.black;
+    }else{
+      return Colors.grey[100];
+    }
+}
+
+void moveSnake(){
+}
 
 }
