@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 
 class Food {
   List<int> xyCords;
@@ -41,6 +39,10 @@ class SnakeBody {
 
     // if no direction is valid, return no direction
     return [0, 0];
+  }
+
+  String get dirStr {
+    return dir;
   }
 
   SnakeBody(

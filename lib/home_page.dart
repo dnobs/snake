@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:snake/snake_game_objects.dart';
 import 'dart:math';
 import 'dart:async';
+import 'dart:core';
 
 class HomePage extends StatefulWidget{
   @override
@@ -22,10 +23,9 @@ class _HomePageState extends State<HomePage> {
   void initState(){
     // initalize variables
     random = Random();
-    gameGridSize = 20;
+    gameGridSize = 10;
     buttons = [1, 3, 5, 7];
     super.initState();
-    speed = Duration(milliseconds: 500);
 
     // start game & put food out there!
     newGame();
@@ -67,37 +67,30 @@ class _HomePageState extends State<HomePage> {
 
           // Controls Area
           Expanded(
-            child: GestureDetector(
-              child: Draggable(
-                child: SizedBox(
+            child: Center(
+              child: AspectRatio(
+                child: Draggable(
                   child: Container(
                     color: Colors.blue[200],
                   ),
-                  height: 100,
-                  width: 100,
-                ),
-                feedback: SizedBox(
-                  child: Container(
+                  feedback: Container(
                     color: Colors.black,
                   ),
-                  height: 100,
-                  width: 100,
+                  onDragEnd: (details){
+                    updateDirection(details);
+                    },
                 ),
-                onDragEnd: (details){
-                  updateDirection(details);
-                  },
+                aspectRatio: 1.0,
               ),
             ),
+            flex: 2,
           ),
-          
-          // Padding on bottom of screen
+
           SizedBox(
-            height: 200,
-            width: 200,
+            height: 50,
           )
 
         ],
-        mainAxisSize: MainAxisSize.max,
       )
     );
   }
@@ -110,7 +103,21 @@ class _HomePageState extends State<HomePage> {
 
   // button controls
   void updateDirection(DraggableDetails dragDetails){
-    print(dragDetails.velocity.toString());
+    List<double> velocity = [
+      dragDetails.velocity.pixelsPerSecond.dx,
+      dragDetails.velocity.pixelsPerSecond.dy
+    ];
+
+    if(velocity[0] == 0 && velocity[1] == 0)
+      // no drag, do nothing
+      return;
+    if (velocity[0].abs() > velocity[1].abs()){
+      if(velocity[0] > 0) snake.changeDirection('right');
+      else                snake.changeDirection('left');
+    } else {
+      if(velocity[1] > 0) snake.changeDirection('down');
+      else                snake.changeDirection('up');
+    }
   }
 
   Food placeFood(){
@@ -224,7 +231,7 @@ class _HomePageState extends State<HomePage> {
       );
     } while (!onBoard(snake.nextLoc()));
 
-    speed = Duration(milliseconds: 1000);
+    speed = Duration(milliseconds: 300);
     snakeMover = Timer.periodic(speed, (Timer t) => moveSnake());
   }
 
