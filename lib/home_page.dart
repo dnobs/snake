@@ -67,24 +67,33 @@ class _HomePageState extends State<HomePage> {
 
           // Controls Area
           Expanded(
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: GridView.builder(
-                padding: const EdgeInsets.all(10.0),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 15,
-                  mainAxisSpacing: 15,
-                  childAspectRatio: 1,
+            child: GestureDetector(
+              child: Draggable(
+                child: SizedBox(
+                  child: Container(
+                    color: Colors.blue[200],
+                  ),
+                  height: 100,
+                  width: 100,
                 ),
-                itemCount: 9,
-                itemBuilder: (context, i) => RaisedButton(
-                  color: buttons.contains(i) ? Colors.red: Colors.grey[100],
-                  onPressed: (){updateDirection(i);},
-                )
+                feedback: SizedBox(
+                  child: Container(
+                    color: Colors.black,
+                  ),
+                  height: 100,
+                  width: 100,
+                ),
+                onDragEnd: (details){
+                  updateDirection(details);
+                  },
               ),
             ),
-            flex: 2,
+          ),
+          
+          // Padding on bottom of screen
+          SizedBox(
+            height: 200,
+            width: 200,
           )
 
         ],
@@ -100,20 +109,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   // button controls
-  void updateDirection(int button){
-    if(button == 1) snake.changeDirection('up');
-    if(button == 5) snake.changeDirection('right');
-    if(button == 7) snake.changeDirection('down');
-    if(button == 3) snake.changeDirection('left');
-
-    // for testing:
-    if(button == 4) moveSnake();
-    if(button == 8) snake = SnakeBody([snake.head], snake.dir);
-    if(button == 2) {
-      snakeMover.cancel();
-      speed = Duration(milliseconds: 200);
-      snakeMover = Timer.periodic(speed, (Timer t) => moveSnake());
-    }
+  void updateDirection(DraggableDetails dragDetails){
+    print(dragDetails.velocity.toString());
   }
 
   Food placeFood(){
@@ -204,18 +201,30 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void newGame(){
-    List<List<int>> start = [[
+  List<int> generateRandomPoint(){
+    return [
       random.nextInt(gameGridSize),
       random.nextInt(gameGridSize)
-    ]];
+    ];
+  }
 
-    int i = random.nextInt(3);
+  String generateRandomDirection(){
     List<String> directions = ['up', 'right', 'down', 'left'];
-    String randomDirection = directions[i];
+    int i = random.nextInt(3);
+    return directions[i];
+  }
 
-    snake = SnakeBody(start, randomDirection);
-    speed = Duration(milliseconds: 200);
+  void newGame(){
+
+    // Avoid games that result in immediate loss
+    do{
+      snake = SnakeBody(
+          [generateRandomPoint()],
+          generateRandomDirection()
+      );
+    } while (!onBoard(snake.nextLoc()));
+
+    speed = Duration(milliseconds: 1000);
     snakeMover = Timer.periodic(speed, (Timer t) => moveSnake());
   }
 
