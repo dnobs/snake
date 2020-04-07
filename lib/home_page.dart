@@ -15,13 +15,17 @@ class _HomePageState extends State<HomePage> {
   SnakeBody snake;
   Food food;
   var random;
-  var speed;
+  int speed;
   Timer snakeMover;
-  int highScore = 0;
+  int highScore;
+  // TODO: implement persistent high score
+  // TODO: implement settings page
 
   @override
   void initState(){
     // initalize variables
+    speed = 300;
+    highScore = 0;
     random = Random();
     gameGridSize = 10;
     buttons = [1, 3, 5, 7];
@@ -36,7 +40,19 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context){
     return Scaffold(
       appBar: AppBar(
-        title: Text("Snake            High Score: " + highScore.toString()),
+        title: Text("High Score: " + highScore.toString()),
+        actions: <Widget>[
+          IconButton(
+            onPressed: newGame,
+            icon: Icon(Icons.refresh),
+          ),
+          IconButton(
+              onPressed: (){
+                print('pressed');
+              },
+              icon: Icon(Icons.settings),
+          )
+        ],
       ),
 
       body: Column(
@@ -188,7 +204,7 @@ class _HomePageState extends State<HomePage> {
 
   void _showWinDialog({String score}){
     showDialog(
-      barrierDismissible: false,
+      barrierDismissible: true,
       context: context,
       builder: (BuildContext context){
         return AlertDialog(
@@ -231,8 +247,10 @@ class _HomePageState extends State<HomePage> {
       );
     } while (!onBoard(snake.nextLoc()));
 
-    speed = Duration(milliseconds: 300);
-    snakeMover = Timer.periodic(speed, (Timer t) => moveSnake());
+    snakeMover = Timer.periodic(
+        Duration(milliseconds: speed),
+        (Timer t) => moveSnake()
+    );
   }
 
   void updateHighScore(newScore){
