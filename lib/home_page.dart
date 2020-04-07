@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:snake/snake_body.dart';
 import 'dart:math';
+import 'dart:async';
 
 class HomePage extends StatefulWidget{
   @override
@@ -8,14 +9,17 @@ class HomePage extends StatefulWidget{
 }
 
 class _HomePageState extends State<HomePage> {
-  SnakeBody snake;
   int gameGridSize = 10;
   List<int> buttons = [1, 3, 5, 7];
+  SnakeBody snake;
+  var speed = Duration(seconds:1);
+  Timer snakeMover;
 
   @override
   void initState(){
     super.initState();
     snake = SnakeBody([[1,1]], 'right');
+    snakeMover = Timer.periodic(speed, (Timer t) => moveSnake());
   }
 
   @override
