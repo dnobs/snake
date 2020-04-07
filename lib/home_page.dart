@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:snake/snake_body.dart';
+import 'package:snake/snake_game_objects.dart';
 import 'dart:math';
 import 'dart:async';
 
@@ -9,24 +9,34 @@ class HomePage extends StatefulWidget{
 }
 
 class _HomePageState extends State<HomePage> {
-  int gameGridSize = 10;
-  List<int> buttons = [1, 3, 5, 7];
+  int gameGridSize;
+  List<int> buttons;
   SnakeBody snake;
-  var speed = Duration(seconds:1);
+  Food food;
+  var random;
+  var speed;
   Timer snakeMover;
+  int highScore = 0;
 
   @override
   void initState(){
+    // initalize variables
+    random = Random();
+    gameGridSize = 20;
+    buttons = [1, 3, 5, 7];
     super.initState();
-    snake = SnakeBody([[1,1]], 'right');
-    snakeMover = Timer.periodic(speed, (Timer t) => moveSnake());
+    speed = Duration(milliseconds: 500);
+
+    // start game & put food out there!
+    newGame();
+    food = placeFood();
   }
 
   @override
   Widget build(BuildContext context){
     return Scaffold(
       appBar: AppBar(
-        title: Text("Snake"),
+        title: Text("Snake            High Score: " + highScore.toString()),
       ),
 
       body: Column(
@@ -36,7 +46,7 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: AspectRatio(
               child: GridView.builder(
-                padding: const EdgeInsets.all(10.0),
+                padding: const EdgeInsets.all(30.0),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: gameGridSize,
                   childAspectRatio: 1.0, // ensures each cell is a square
@@ -46,8 +56,6 @@ class _HomePageState extends State<HomePage> {
                 itemCount: pow(gameGridSize, 2),
                 itemBuilder: (context, i) => Container(
                   child: Center(
-//                      child: Text(getCords(i).toString())
-                  child: Text(snake.at(getCords(i)) ? 'x' : getCords(i).toString())
                   ),
                   color: getCellColor(i),
                 ),
@@ -73,7 +81,6 @@ class _HomePageState extends State<HomePage> {
                 itemBuilder: (context, i) => RaisedButton(
                   color: buttons.contains(i) ? Colors.red: Colors.grey[100],
                   onPressed: (){updateDirection(i);},
-                  child: Text(i.toString()),
                 )
               ),
             ),
@@ -101,37 +108,119 @@ class _HomePageState extends State<HomePage> {
 
     // for testing:
     if(button == 4) moveSnake();
+    if(button == 8) snake = SnakeBody([snake.head], snake.dir);
+    if(button == 2) {
+      snakeMover.cancel();
+      speed = Duration(milliseconds: 200);
+      snakeMover = Timer.periodic(speed, (Timer t) => moveSnake());
+    }
+  }
+
+  Food placeFood(){
+    List<int> loc;
+    do {
+      loc = [
+        random.nextInt(gameGridSize),
+        random.nextInt(gameGridSize)
+      ];
+
+    } while (snake.at(loc)); //ie until snake is not at the location of the food
+
+    return Food(loc);
   }
 
   void moveSnake(){
-    // move head forwards
-    List<int> delta = snake.direction;
-    List<int> head = snake.head;
-    List<int> newHead = [head[0] + delta[0], head[1] + delta[1]];
-
-    // if the snake is going off the board, wrap it
-    if(newHead[0] < 0)                newHead[0] = gameGridSize-1;
-    if(newHead[0] > gameGridSize - 1) newHead[0] = 0;
-    if(newHead[1] < 0)                newHead[1] = gameGridSize-1;
-    if(newHead[1] > gameGridSize - 1) newHead[1] = 0;
-
-    snake.newHead(newHead);
-    snake.dropTail();
-
     // update graphics
     setState((){
-      print(snake.toString());
+      // move head forwards
+      List<int> newHead = snake.nextLoc();
+
+      // if the snake will go off the board or hit itself, end game
+      if(!onBoard(newHead) || snake.at(newHead)){
+        gameOver();
+      } else {
+        // if everything is ok, continue moving
+        snake.move();
+
+        // if found food
+        if (snake.at(food.loc)) {
+          snake.grow(food.loc);
+          // place new food on the board
+          food = placeFood();
+          // update speed
+          //        snakeMover = Timer.periodic(speed, (Timer t) => moveSnake());
+        }
+      }
     });
   }
 
   Color getCellColor(int i){
-    if(snake.at(getCords(i))) {
-      print('checking for snake at: ' + getCords(i).toString() + ' SNAKE');
-      return Colors.blue;
-    }else{
-      print('checking for snake at: ' + getCords(i).toString());
-      return Colors.grey[100];
+    if (snake.stuffed(getCords(i))) {
+      return Colors.red[900];
+    } else if (snake.at(getCords(i))){
+      return Colors.red;
+    } else if (food.at(getCords(i))) {
+      return Colors.green;
+    } else {
+      return Colors.grey[200];
     }
+  }
+
+  bool onBoard(List<int> point){
+    return (
+        (point[0] >= 0) &&
+        (point[1] >= 0) &&
+        (point[0] < gameGridSize ) &&
+        (point[1] < gameGridSize)
+    );
+  }
+
+  void gameOver(){
+    snakeMover.cancel();
+    updateHighScore(snake.length);
+    print("game over");
+    _showWinDialog(score: snake.length.toString());
+  }
+
+  void _showWinDialog({String score}){
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context){
+        return AlertDialog(
+          title: Text('GAME OVER! YOUR SCORE: ' + score),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('Play Again!'),
+              onPressed: (){
+                newGame();
+                Navigator.of(context).pop();
+              }
+            )
+          ]
+
+        );
+      }
+    );
+  }
+
+  void newGame(){
+    List<List<int>> start = [[
+      random.nextInt(gameGridSize),
+      random.nextInt(gameGridSize)
+    ]];
+
+    int i = random.nextInt(3);
+    List<String> directions = ['up', 'right', 'down', 'left'];
+    String randomDirection = directions[i];
+
+    snake = SnakeBody(start, randomDirection);
+    speed = Duration(milliseconds: 200);
+    snakeMover = Timer.periodic(speed, (Timer t) => moveSnake());
+  }
+
+  void updateHighScore(newScore){
+    if(newScore > highScore) highScore = newScore;
   }
 
 }

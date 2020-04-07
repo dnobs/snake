@@ -1,7 +1,21 @@
 import 'package:flutter/material.dart';
 
-//  bool operator ==(o) => o is
-//    GridCell && o.xy[0] == loc[0] && o.xy[1] == loc[1];
+
+class Food {
+  List<int> xyCords;
+
+  List<int> get loc {
+    return xyCords;
+  }
+
+  Food(
+    this.xyCords,
+  );
+
+  bool at(List<int> point) {
+    return (xyCords[0] == point[0] && xyCords[1] == point[1]);
+  }
+}
 
 class SnakeBody {
   List<List<int>> xyList;
@@ -15,11 +29,18 @@ class SnakeBody {
     return xyList.first;
   }
 
+  int get length {
+    return xyList.length;
+  }
+
   List<int> get direction {
     if(dir == 'up') return [0, -1];
     if(dir == 'right') return [1, 0];
     if(dir == 'down') return [0, 1];
     if(dir == 'left') return [-1, 0];
+
+    // if no direction is valid, return no direction
+    return [0, 0];
   }
 
   SnakeBody(
@@ -33,15 +54,22 @@ class SnakeBody {
     if (newDirection == 'right' && dir != 'left') dir = newDirection;
     if (newDirection == 'down' && dir != 'up') dir = newDirection;
     if (newDirection == 'left' && dir != 'right') dir = newDirection;
-    print('my direction: ' + dir);
   }
 
-  void newHead(List<int> xy) {
+  List<int> nextLoc(){
+    return [
+      xyList.last[0] + this.direction[0],
+      xyList.last[1] + this.direction[1]
+    ];
+  }
+
+  void grow(List<int> xy) {
     xyList.add(xy);
     return;
   }
 
-  void dropTail() {
+  void move() {
+    xyList.add(this.nextLoc());
     xyList.removeAt(0);
     return;
   }
@@ -51,7 +79,16 @@ class SnakeBody {
       if (loc[0] == point[0] && loc[1] == point[1]) return true;
     }
     return false;
+  }
 
+  bool stuffed(List<int> point){
+    int numOcc = 0;
+    for (var loc in xyList) {
+      if (loc[0] == point[0] && loc[1] == point[1]) numOcc++;
+    }
+
+    if(numOcc > 1) return true;
+    else return false;
   }
 
   String toString(){
