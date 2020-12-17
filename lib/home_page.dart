@@ -20,6 +20,7 @@ class _HomePageState extends State<HomePage> {
   int highScore;
   // TODO: implement persistent high score
   // TODO: implement settings page
+  // TODO: examine performance, eg frames per second for different board sizes
 
   @override
   void initState(){
@@ -40,7 +41,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context){
     return Scaffold(
       appBar: AppBar(
-        title: Text("High Score: " + highScore.toString()),
+        title: Text("SNAKE GAME"),
         actions: <Widget>[
           IconButton(
             onPressed: newGame,
@@ -104,8 +105,20 @@ class _HomePageState extends State<HomePage> {
 
           SizedBox(
             height: 50,
-          )
+          ),
 
+          AppBar(
+            title: Text("HIGH SCORE: " + highScore.toString()),
+            actions: <Widget>[
+              IconButton(
+                  onPressed: (){
+                    snakeMover.isActive ? resumeGame() : pauseGame();
+                  },
+                  icon: snakeMover.isActive ? Icon(Icons.pause) : Icon(Icons.play_arrow),
+              )
+            ],
+
+          ),
         ],
       )
     );
@@ -250,6 +263,17 @@ class _HomePageState extends State<HomePage> {
     snakeMover = Timer.periodic(
         Duration(milliseconds: speed),
         (Timer t) => moveSnake()
+    );
+  }
+
+  void pauseGame(){
+    snakeMover.cancel();
+  }
+
+  void resumeGame(){
+    snakeMover = Timer.periodic(
+        Duration(milliseconds: speed),
+            (Timer t) => moveSnake()
     );
   }
 
